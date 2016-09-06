@@ -42,10 +42,47 @@
 ///    file, run the resulting executable, and parse and return the result!
 ///    Try `man system` and `man popen`.
 
+int get_alignment(char c) {
+    if (c == 'd' || c == 'l') {
+        return 8;
+    } else if (c == 'i' || c == 'p' || c == 'f') {
+        return 4;
+    } else if (c == 's') {
+        return 2;
+    } else if (c == 'c') {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+int update_size(int cur_size, int alignment) {
+    int remainder = cur_size % alignment;
+    if (remainder != 0) {
+        cur_size = cur_size - remainder + alignment;
+    }
+    return cur_size;
+}
+
 size_t spec_size(const char* spec) {
-    (void) spec;
-    // YOUR CODE HERE
-    return 0;
+    // Assume an alignment of 1 to start with.
+    int alignment = 1;
+    int size = 0;
+    for (int i = 0; i < (int) strlen(spec); i++) {
+        // The alignment of the current character.
+        int cur_alignment = get_alignment(spec[i]);
+        if (cur_alignment == 0) {
+            return 0;
+        }
+
+        // If we have a new largest alignment, update.
+        if (alignment < cur_alignment) {
+            alignment = cur_alignment;
+        }
+        size = update_size(size, cur_alignment);
+        size += cur_alignment;
+    }
+    return update_size(size, alignment);
 }
 
 int main(int argc, char* argv[]) {
