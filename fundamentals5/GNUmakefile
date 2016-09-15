@@ -1,25 +1,19 @@
-PROGRAMS = add addu fib membench-malloc membench-arena \
-	membench-arena1 membench-arena2 membench-arena3 \
-	membench-arena4
-
+PROGRAMS = fib nogcbench gcbench
 all: $(PROGRAMS)
 
-DEFS += -pthread
+O ?= 0
 include ../common/rules.mk
 
 %.o: %.c $(BUILDSTAMP)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPCFLAGS) $(O) -o $@ -c $<
 
-add: add.o
-	$(CC) $(CFLAGS) $(O) -o $@ $^
-
-addu: addu.o
-	$(CC) $(CFLAGS) $(O) -o $@ $^
-
 fib: fib.o
 	$(CC) $(CFLAGS) $(O) -o $@ $^
 
-membench-%: membench.o mb-%.o
+nogcbench: nogcbench.o m61gc.o
+	$(CC) $(CFLAGS) $(O) -o $@ $^
+
+gcbench: gcbench.o m61gc.o
 	$(CC) $(CFLAGS) $(O) -o $@ $^
 
 clean:
