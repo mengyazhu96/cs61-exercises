@@ -96,12 +96,17 @@ void m61_print_allocations(void) {
 }
 
 static void mark_allocations(const char* base, size_t sz) {
-    (void) base;
     if (sz < sizeof(void*))
         return;
+
     for (size_t i = 0; i <= sz - sizeof(void*); ++i) {
         // check if the data at `base + i` contains a pointer
         // YOUR CODE HERE
+        struct allocation* alloc = find_allocation(*(char**) (base + i));
+        if (alloc != NULL && alloc->marked != 1) {
+            alloc->marked = 1;
+            mark_allocations(alloc->ptr, alloc->sz);
+        }            
     }
 }
 
@@ -112,10 +117,13 @@ void m61_gc(void) {
     __asm__ __volatile__("" : : : "rbx", "r12", "r13", "r14", "r15", "memory");
 #endif
 
+printf(".\n");
     char* stack_top = (char*) __builtin_frame_address(0);
 
     // unmark all active allocations
     // YOUR CODE HERE
+    for (size_t i = 0; i < nallocs; i++)
+        allocs[i].marked = 0;
 
     // mark allocations in the stack
     mark_allocations(stack_top, m61_stack_bottom - stack_top);
@@ -129,6 +137,10 @@ void m61_gc(void) {
 
     // free unmarked allocations
     // YOUR CODE HERE
+    for (size_t i = 0; i < nallocs; i++) {
+        if (allocs[i].marked != 1)
+            m61_free(allocs[i].ptr);
+    }
 }
 
 
