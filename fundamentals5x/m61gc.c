@@ -117,8 +117,7 @@ void m61_gc(void) {
     __asm__ __volatile__("" : : : "rbx", "r12", "r13", "r14", "r15", "memory");
 #endif
 
-printf(".\n");
-    char* stack_top = (char*) __builtin_frame_address(0);
+    char* stack_top = (char*) &stack_top;
 
     // unmark all active allocations
     // YOUR CODE HERE
