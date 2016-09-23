@@ -2,10 +2,10 @@ CS61 x86-64 Assembly Cheat Sheat
 
 A. Registers
 A1. There are a total of 16 general purpose (GP) registers.
-A2. There are <HOWMANY> GP registers with symbolic names.
-A3. They are: <LIST ALL THE NAMED REGISTERS>
-A4. There are <HOWMANY> GP registers with number names.
-A5. They are: <DESCRIBE/LIST ALL THE NUMBERED REGISTERS>
+A2. There are 8 GP registers with symbolic names.
+A3. They are: rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp 
+A4. There are 8 GP registers with number names.
+A5. They are: r8 - r15
 A6. rip is: <DESCRIBE IT>
 A7. rsp is: <DESCRIBE IT>
 A8. rbp is: <DESCRIBE IT>
