@@ -6,9 +6,9 @@ A2. There are 8 GP registers with symbolic names.
 A3. They are: rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp 
 A4. There are 8 GP registers with number names.
 A5. They are: r8 - r15
-A6. rip is: <DESCRIBE IT>
-A7. rsp is: <DESCRIBE IT>
-A8. rbp is: <DESCRIBE IT>
+A6. rip is: the register that stores the memory address of the next instruction.
+A7. rsp is: the register that stores the pointer to the top of the current stack frame.
+A8. rbp is: the register that stores the pointer to the base of the current stack frame; this pointer will always be higher than rsp.
 
 B. Parameter passing
 B1. The first argument to a function is passed in register rdi.
@@ -20,26 +20,26 @@ B6. The sixth argument to a function is passed in register r9.
 B7. The seventh argument to a function is passed as memory on the stack.
 
 C. Addressing modes
-C1. $N (for N a number) means:
-C2. The expression %REG (for REG a register) means:
-C3. (%REG) means:
-C4. (%REG, %REG) means:
-C5. (%REG, %REG, N) for N=1, 2, 4 or 8 means:
-C6. N(<MODE>) for addressing mode C3, C4, or C5 means:
-C7. lea<TYPE> (for TYPE one of b,w,l,q) means:
+C1. $N (for N a number) means: the constant N
+C2. The expression %REG (for REG a register) means: the value stored at the register REG.
+C3. (%REG) means: REG contains a pointer, and this is the value stored at that pointer.
+C4. (%REG, %REG) means: the value stored at the address formed by adding the values of the two REGs.
+C5. (%REG, %REG, N) for N=1, 2, 4 or 8 means: the value stored at the address formed by adding REG1 + REG2 * S (pointer arithmetic).
+C6. N(<MODE>) for addressing mode C3, C4, or C5 means: add N to the address.
+C7. lea<TYPE> (for TYPE one of b,w,l,q) means: load effective address; used to compute an address and then put the result in a register.
 
 D. x86 flags
 For each of the following flags, write down what it means for the flag
 to be set:
-D1. SF
-D2. CF
-D3. ZF
-D4. OF
+D1. SF: the most recent operation yielded a negative value.
+D2. CF: overflow happened when performing unsigned integer arithmetic.
+D3. ZF: the most recent operation yielded a 0.
+D4. OF: the most recent operation caused a 2's complement overflow (signed integer arithmetic).
 
 E. Instructions whose only purpose is to set flag values:
 Explain how each instruction sets the flag registers.
-E1. cmp operand1, operand2
-E2. test operand1, operand2
+E1. cmp operand1, operand2: calculates operand1 - operand2 nondestructively
+E2. test operand1, operand2: calculates operand1 & operand2 nondestructively
 
 F. Jump Instructions
 For each jump instruction below, write the expression describing when
@@ -49,15 +49,15 @@ assuming that the previous operation were a cmp or test instruction,
 what relationship the operands of the previous instruction have, e.g.,
 op1 > op2, or op1 != 0, or whatever applies.
 
-F1. je
-F2. jne
-F3. js
-F4. jns
-F5. jg
-F6. jge
-F7. jl
-F8. jle
-F9. ja
-F10. jae
-F11. jb
-F12. jbe
+F1. je: jump if equal (ZF = 1)
+F2. jne: jump if not equal (ZF = 0)
+F3. js: jump if signed/negative (SF = 1)
+F4. jns: jump if not signed/negative (SF = 0)
+F5. jg: jump if greater than (ZF = 0 and SF = OF)
+F6. jge: jumpif greater than or equal to (SF = OF)
+F7. jl: jump if less (SF != OF)
+F8. jle: jump if less than or equal to (ZF = 1 or SF != OF)
+F9. ja: jump above (CF = 0 and ZF = 0)
+F10. jae: jump above or equal (CF = 0)
+F11. jb: jump below (CF = 1)
+F12. jbe: jump below or equal (CF = 1 or ZF = 1)
