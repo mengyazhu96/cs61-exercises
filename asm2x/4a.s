@@ -1,9 +1,9 @@
 	.file	"4a.c"
 	.section	.rodata.str1.1,"aMS",@progbits,1
 .LC0:
-	.string	"%c\n"
+	.string <Format string removed>
 .LC1:
-	.string	"%d\n"
+	.string <Format string removed>
 	.text
 	.globl	output_func
 	.type	output_func, @function
@@ -11,17 +11,13 @@ output_func:
 .LFB23:
 	pushq	%rbx
 	movq	%rdi, %rbx
-	movsbl	(%rdi), %edx
+	call	puts
+	movl	(%rbx), %edx
 	movl	$.LC0, %esi
 	movl	$1, %edi
 	movl	$0, %eax
 	call	__printf_chk
-	movl	(%rbx), %edx
-	movl	$.LC1, %esi
-	movl	$1, %edi
-	movl	$0, %eax
-	call	__printf_chk
-	movl	(%rbx), %edx
+	movq	(%rbx), %rdx
 	movl	$.LC1, %esi
 	movl	$1, %edi
 	movl	$0, %eax

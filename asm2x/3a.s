@@ -1,9 +1,11 @@
 	.file	"3a.c"
 	.section	.rodata.str1.1,"aMS",@progbits,1
 .LC0:
-	.string	"%d\n"
+	.string	<Format String removed>
 .LC1:
-	.string	"%c\n"
+	.string	<Format String removed>
+.LC2:
+	.string	<Format String removed>
 	.text
 	.globl	output_func
 	.type	output_func, @function
@@ -22,7 +24,7 @@ output_func:
 	movl	$0, %eax
 	call	__printf_chk
 	movsbl	6(%rbx), %edx
-	movl	$.LC1, %esi
+	movl	$.LC2, %esi
 	movl	$1, %edi
 	movl	$0, %eax
 	call	__printf_chk

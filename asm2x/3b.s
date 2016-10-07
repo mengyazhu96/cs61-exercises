@@ -1,9 +1,9 @@
 	.file	"3b.c"
 	.section	.rodata.str1.1,"aMS",@progbits,1
 .LC0:
-	.string	"%lu\n"
+	.string	<Format String removed>
 .LC1:
-	.string	"%d\n"
+	.string	<Format String removed>
 	.text
 	.globl	output_func
 	.type	output_func, @function

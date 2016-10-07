@@ -1,7 +1,7 @@
 	.file	"2c.c"
 	.section	.rodata.str1.1,"aMS",@progbits,1
 .LC0:
-	.string	"%ld\n"
+	.string	<Format String removed>
 	.text
 	.globl	output_func
 	.type	output_func, @function
