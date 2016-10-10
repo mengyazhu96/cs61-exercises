@@ -43,14 +43,20 @@
 ///    Try `man system` and `man popen`.
 
 int get_alignment(char c) {
-    if (c == 'd' || c == 'l') {
-        return 8;
-    } else if (c == 'i' || c == 'p' || c == 'f') {
-        return 4;
-    } else if (c == 's') {
-        return 2;
+	if (c == 'd') {
+		return __alignof__(double);
+	} else if (c == 'l') {
+		return __alignof__(long);
+	} else if (c == 'p') {
+		return __alignof__(void*);
+	} else if (c == 'i') {
+		return __alignof__(int);
+	} else if (c == 'f') {
+		return __alignof__(float);
+	} else if (c == 's') {
+		return __alignof__(short);
     } else if (c == 'c') {
-        return 1;
+        return __alignof__(char);
     } else {
         return 0;
     }

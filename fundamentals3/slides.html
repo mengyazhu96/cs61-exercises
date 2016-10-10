@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Lecture 3 - CS 61 2016</title>
+</head>
+
+<style>
+body {
+font-family: "Chaparral Pro", "Hoefler Text";
+font-size: 36pt;
+margin-left: 1em;
+margin-right: 1em;
+text-rendering: optimizeLegibility;
+}
+h1 {
+font-size: 56pt;
+font-style: italic;
+font-weight: 200;
+color: #000055;
+}
+h1.title {
+  font-family: Impact;
+  font-weight: 800;
+  font-style: normal;
+}
+h2 {
+font-size: 48pt;
+color: #000055;
+font-style: italic;
+font-weight: 400;
+}
+h1 em, h2 em {
+font-style: normal;
+}
+div.sl > h1, div.sl > h2 {
+margin-top: 0;
+}
+div.sl {
+padding-top: 0.5em;
+min-height: 24em;
+}
+.hide {
+display: none;
+}
+.nb, .nw {
+white-space: nowrap;
+}
+.pw, pre.pw {
+  white-space: pre-wrap;
+}
+.col {
+  columns: 400px 3;
+  column-gap: 2em;
+}
+table, tr, td {
+padding: 0;
+border-spacing: 0;
+border: 0 none;
+border-collapse: collapse;
+empty-cells: show;
+vertical-align: baseline;
+}
+table.padr td, table.padr th {
+padding-right: 1em;
+}
+th {
+font-style: italic;
+font-weight: inherit;
+}
+table.x > tbody > tr > td {
+  padding-right: 0.75em;
+}
+table.x > thead > tr > th {
+  text-align: left;
+  padding-right: 0.75em;
+}
+.r {
+text-align: right;
+}
+.hl0 {
+  color: #dd6600;
+}
+.hl1 {
+  color: #00aa33;
+}
+.hl2 {
+  color: #7777ff;
+}
+div.source {
+padding-top: 2em;
+font-style: italic;
+font-size: 12pt;
+color: #777777;
+}
+.sm {
+font-size: smaller;
+}
+b.spec {
+font-weight: 600;
+}
+pre, code, tt {
+font-family: Menlo, Monaco, monospace;
+font-size: 90%;
+}
+ul{
+  line-height: 1.2;
+}
+.sltax > ul {
+  font-weight: bold;
+}
+.sltax > ul > li > ul {
+  font-weight: normal;
+}
+.sltax > ul > li > ul > li > ul {
+  font-style: italic;
+}
+hl {
+  color: #dd6600;
+}
+.helv {
+  font-family: Helvetica;
+}
+.sl.helv h2 {
+  font-style: normal;
+}
+</style>
+<script src="jquery-1.12.3.min.js"></script>
+<script src="harvard14.js"></script>
+
+<body>
+
+<!--
+<div class="sl">
+<h1 class="title">A TAXONOMY<br><span style="font-size:150%">OF NON-SUCCESS</font></h1>
+
+<div style="font-size:85%">
+Eddie Kohler<br>
+presenting work with many others
+</div>
+</div>
+-->
+
+<div class="sl">
+<h2>Why not C?</h2>
+<ul>
+<li>Dangerous</li>
+<li>Easy to make serious mistakes</li>
+<li>Undefined behavior: compiler advances regularly break old code</li>
+<li>Plays a major role in “our ongoing computer security nightmare”</li>
+</ul>
+</div>
+
+<div class="sl">
+<h2>Why C?</h2>
+<ul>
+<li>Close to the machine
+<ul><li>Example: struct layout rules let us define a language object whose memory layout is <i>exactly</i> what a piece of hardware expects (e.g., a screen, a disk driver)</li></ul></li>
+<li>Long and rich history of people getting serious work done
+<ul>
+<li>Try to understand why</li>
+</ul></li>
+</ul>
+</div>
+
+<div class="sl">
+<h2>Should you use C?</h2>
+</div>
+
+<div class="sl">
+<h2>Should you use C?</h2>
+<ul>
+<li>No</li>
+</ul>
+</div>
+
+<div class="sl">
+<h2>Should you use C?</h2>
+<ul>
+<li>No</li>
+<li>But you will learn <i>so much</i> about computers and programming by knowing how</li>
+</ul>
+</div>
+
+<div class="sl">
+<h2>Abstract machine &amp; real machine</h2>
+<ul>
+<li>C programmers write to an <i>abstract machine</i> defined by the C standard</li>
+<li>The standard says how correct programs must behave
+<ul>
+<li>Example: <code>1 + 2 == 3</code></li>
+<li>Example: If <code>const char* s = "foo"</code>, then <code>strchr(s, 'o') == &amp;s[1]</code></li>
+<li>Getting this right requires the compiler and library authors to understand the standard and the <i>real machine</i> (e.g., x86-64)</li>
+<li>We look at machine code to analyze this mapping</li>
+</ul></li>
+<li>The standard says some incorrect programs must be rejected
+<ul>
+<li>Example: <code>const char* s = ...; const char* t = ...; const char* u = s + t;</code>
+</li></ul></li>
+</ul>
+</div>
+
+<div class="sl">
+<h2>Undefined behavior</h2>
+<ul>
+<li>The standard also says some incorrect programs have <i>undefined behavior</i>!</li>
+<li>In a sense, these programs <i>are not C programs</i>
+<ul>
+<li>The compiler can reject them or accept them</li>
+<li>Once undefined behavior executes, they may do anything</li>
+<li>The compiler can assume that undefined behavior is impossible—so if the compiler can prove that a condition would cause undefined behavior later, it can assume that condition <i>will never occur</i></li>
+</ul></li>
+<li>Undefined behavior might work on your machine and compiler right now, but a compiler update or machine change could destroy your life</li>
+<li>Shorthand: “nasal demons”</li>
+<li>Example: <code>INT_MIN - 1</code></li>
+<li>Example: <code>free(x); free(x);</code></li>
+<li>Example: <code>int* x = NULL; *x;</code></li>
+</ul>
+</div>
+
+<div class="sl">
+<h2>Storage duration</h2>
+<ul>
+<li>Static: object lives as long as the program</li>
+<li>Automatic: object lives as long as its containing function</li>
+<li>Dynamic: object is explicitly allocated by <code>malloc</code> and explicitly freed by <code>free</code></li>
+</ul>
+</div>
+
+<div class="sl">
+<h2>Why not dynamic storage duration?</h2>
+<ul>
+<li>C programmer is responsible for managing lifetime</li>
+<li>Source of many problems: memory leaks, use-after-free, double-free, …</li>
+<li>Many of these problems are undefined behavior</li>
+</ul>
+</div>
+
+<div class="sl">
+<h2>Why dynamic storage duration?</h2>
+<ul>
+<li>Objects can outlive the functions that created them!</li>
+<li>Object size determined by the input!</li>
+</ul>
+</div>
+
+<div class="sl">
+<h2>Dynamic memory allocators</h2>
+<ul>
+<li>You’re all familiar with <code>malloc</code> and <code>free</code></li>
+<li>This is a <em>general-purpose allocator</em>: it is meant to work well for any size object and for many usage patterns (and it does!)</li>
+<li>But general-purpose allocation is really hard!
+<ul>
+<li>Many variables: size, lifetime, number of threads…</li>
+</ul></li>
+<li>If we know something about how an allocator is used, we can substantially beat general-purpose allocators!</li>
+<li>“Any sufficiently complicated C or Fortran program contains an ad-hoc, informally-specified bug-ridden slow implementation of half of Common Lisp” (Greenspun’s Tenth Law)…</li>
+<li>But any sufficiently performant Java or Python program contains an ad-hoc, informally-specified implementation of malloc and free!</li>
+</ul>
+</div>
+
+</body>
+</html>
