@@ -101,9 +101,11 @@ static void mark_allocations(const char* base, size_t sz) {
 
     for (size_t i = 0; i <= sz - sizeof(void*); ++i) {
         // check if the data at `base + i` contains a pointer
-        // YOUR CODE HERE
-        struct allocation* alloc = find_allocation(*(char**) (base + i));
-        if (alloc != NULL && alloc->marked != 1) {
+        char* ptr;
+        memcpy(&ptr, base + i, sizeof(ptr));
+        struct allocation* alloc = find_allocation(ptr);
+        // struct allocation* alloc = find_allocation(*(char**) (base + i));
+        if (alloc && alloc->marked != 1) {
             alloc->marked = 1;
             mark_allocations(alloc->ptr, alloc->sz);
         }            
@@ -120,7 +122,6 @@ void m61_gc(void) {
     char* stack_top = (char*) &stack_top;
 
     // unmark all active allocations
-    // YOUR CODE HERE
     for (size_t i = 0; i < nallocs; i++)
         allocs[i].marked = 0;
 
@@ -135,10 +136,11 @@ void m61_gc(void) {
 #endif
 
     // free unmarked allocations
-    // YOUR CODE HERE
     for (size_t i = 0; i < nallocs; i++) {
-        if (allocs[i].marked != 1)
+        if (allocs[i].marked != 1) {
             m61_free(allocs[i].ptr);
+            i--;
+        }
     }
 }
 
