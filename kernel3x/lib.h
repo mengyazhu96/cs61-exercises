@@ -98,6 +98,7 @@ void panic(const char* format, ...) __attribute__((noinline, noreturn));
 #define INT_SYS_GETPID          (INT_SYS + 1)
 #define INT_SYS_YIELD           (INT_SYS + 2)
 #define INT_SYS_READ            (INT_SYS + 3)
+#define INT_SYS_WRITE           (INT_SYS + 4)
 
 
 // Console printing

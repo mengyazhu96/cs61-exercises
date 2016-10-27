@@ -114,16 +114,29 @@ void exception(x86_64_registers* reg) {
         schedule();
         break;  /* will not be reached */
 
-
     case INT_SYS_READ: {
         char* buf = (char*) current->p_registers.reg_rdi;
         size_t off = current->p_registers.reg_rsi;
         size_t sz = current->p_registers.reg_rdx;
-        memcpy(buf, &ramdisk[off], sz);
-        current->p_registers.reg_rax = sz;
+        if (!(virtual_memory_lookup(kernel_pagetable, (uintptr_t) off).perm == 0 ||
+            virtual_memory_lookup(kernel_pagetable, (uintptr_t) off + sz - 1).perm == 0)) {       
+                memcpy(buf, &ramdisk[off], sz);
+                current->p_registers.reg_rax = sz;
+        }
         break;
     }
 
+    case INT_SYS_WRITE: {
+        char* buf = (char*) current->p_registers.reg_rdi;
+        size_t off = current->p_registers.reg_rsi;
+        size_t sz = current->p_registers.reg_rdx;
+        if (!(virtual_memory_lookup(kernel_pagetable, (uintptr_t) off).perm == 0 ||
+            virtual_memory_lookup(kernel_pagetable, (uintptr_t) off + sz - 1).perm == 0)) { 
+            memcpy(&ramdisk[off], buf, sz);
+            current->p_registers.reg_rax = sz;
+        }
+        break;
+    }
 
     case INT_GPF:
         error_printf(CPOS(23, 0), 0xC000, "Process %d GPF!\n", current->p_pid);

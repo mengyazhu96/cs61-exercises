@@ -8,7 +8,7 @@ void process_main(void) {
         if (i % 8192 == 0) {
             char buf[30];
             off_t off = rand() % 512;
-            ssize_t r = sys_read(buf, off, 16);
+            ssize_t r = sys_read(buf, off, 1234567890);
             app_printf(0, "read    @%04zx+%zu: \"%.*s\"\n", off, r,
                        (int) r, buf);
         }

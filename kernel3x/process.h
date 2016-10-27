@@ -51,6 +51,20 @@ static inline ssize_t sys_read(void* buf, off_t off, size_t sz) {
     return result;
 }
 
+// sys_write
+//    Write data from the RAMdisk at a given offset.
+static inline ssize_t sys_write(void* buf, off_t off, size_t sz) {
+    ssize_t result;
+    // This is "GCC inline assembly"!
+    asm volatile ("int %1" : "=a" (result)
+                  : "i" (INT_SYS_WRITE),
+                    "D" /* %rdi */ (buf),
+                    "S" /* %rsi */ (off),
+                    "d" /* %rdx */ (sz)
+                  : "cc", "memory");
+    return result;
+}
+
 // sys_panic(msg)
 //    Panic.
 static inline pid_t __attribute__((noreturn)) sys_panic(const char* msg) {
