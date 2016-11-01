@@ -99,7 +99,10 @@ void panic(const char* format, ...) __attribute__((noinline, noreturn));
 #define INT_SYS_YIELD           (INT_SYS + 2)
 #define INT_SYS_READ            (INT_SYS + 3)
 #define INT_SYS_WRITE           (INT_SYS + 4)
+#define INT_SYS_MMAP            (INT_SYS + 5)
 
+#define PROT_READ 28
+#define PROT_WRITE 29
 
 // Console printing
 

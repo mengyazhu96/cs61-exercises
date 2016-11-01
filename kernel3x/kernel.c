@@ -138,6 +138,26 @@ void exception(x86_64_registers* reg) {
         break;
     }
 
+    case INT_SYS_MMAP: {
+        char* address = (char*) current->p_registers.reg_rdi;
+        size_t sz = current->p_registers.reg_rsi;
+        int prot = current->p_registers.reg_rdx;
+        int off = current->p_registers.reg_rcx;
+        if (!(virtual_memory_lookup(kernel_pagetable, (uintptr_t) off).perm == 0 ||
+            virtual_memory_lookup(kernel_pagetable, (uintptr_t) off + sz - 1).perm == 0)) { 
+            if (prot == PROT_WRITE)
+                virtual_memory_map(kernel_pagetable, (uintptr_t) address,
+                    (uintptr_t) &ramdisk[off], sz, PTE_P | PTE_W | PTE_U, NULL);
+            else
+                virtual_memory_map(kernel_pagetable, (uintptr_t) address,
+                    (uintptr_t) &ramdisk[off], sz, PTE_P | PTE_U, NULL);
+            current->p_registers.reg_rax = (uint64_t) address;
+        } else {
+            current->p_registers.reg_rax = (uint64_t) 0;
+        }
+        break;
+    }
+
     case INT_GPF:
         error_printf(CPOS(23, 0), 0xC000, "Process %d GPF!\n", current->p_pid);
         current->p_state = P_BLOCKED;

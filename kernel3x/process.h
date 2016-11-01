@@ -74,6 +74,21 @@ static inline pid_t __attribute__((noreturn)) sys_panic(const char* msg) {
  loop: goto loop;
 }
 
+// sys_mmap
+//    Mmap
+static inline char* sys_mmap(void* address, size_t size, int prot, off_t off) {
+    char* result;
+    asm volatile ("int %1" : "=a" (result)
+                  : "i" (INT_SYS_MMAP),
+                    "D" /* %rdi */ (address),
+                    "S" /* %rsi */ (size),
+                    "d" /* %rdx */ (prot),
+                    "c" /* %rcx */ (off)
+                  : "cc", "memory");
+    return result;
+}
+
+
 
 // OTHER HELPER FUNCTIONS
 

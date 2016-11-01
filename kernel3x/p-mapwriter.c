@@ -2,7 +2,6 @@
 #include "lib.h"
 
 void process_main(void) {
-    /*
     extern char end[];
     char* map = ROUNDUP((char*) end, PAGESIZE)
         + (read_cycle_counter() % 8) * PAGESIZE;
@@ -24,7 +23,6 @@ void process_main(void) {
         }
         sys_yield();
     }
-    */
 
     while (1)
         sys_yield();
