@@ -20,13 +20,15 @@
 //                                      PROC_START_ADDR
 
 #define PROC_SIZE 0x40000
+#define PIPE_SIZE 32
 
 static proc processes[NPROC];   // array of process descriptors
                                 // Note that `processes[0]` is never used.
 proc* current;                  // pointer to currently executing proc
+int reading;
 
 // memory representing a pipe buffer
-static char pipebuffer[1];
+static char pipebuffer[PIPE_SIZE];
 // number of characters currently in pipe buffer
 static size_t pipebuffer_len;
 
@@ -168,14 +170,17 @@ void exception(x86_64_registers* reg) {
         else if (sz == 0)
             // nothing to write
             current->p_registers.reg_rax = 0;
-        else if (pipebuffer_len == 1)
+        else if (pipebuffer_len == PIPE_SIZE) {
             // no room, try again later
             current->p_registers.reg_rax = -1;
-        else {
-            // write 1 character
-            pipebuffer[0] = buf[0];
-            pipebuffer_len = 1;
-            current->p_registers.reg_rax = 1;
+            schedule();
+        } else {
+            size_t chars_to_write = PIPE_SIZE - pipebuffer_len;
+            if (sz < chars_to_write)
+                chars_to_write = sz;
+            memcpy(pipebuffer + pipebuffer_len, buf, chars_to_write);
+            pipebuffer_len += chars_to_write;
+            current->p_registers.reg_rax = chars_to_write;
         }
 
         break;
@@ -192,14 +197,19 @@ void exception(x86_64_registers* reg) {
         else if (sz == 0)
             // empty read buffer
             current->p_registers.reg_rax = 0;
-        else if (pipebuffer_len == 0)
+        else if (pipebuffer_len == 0) {
             // nothing to read, try again later
             current->p_registers.reg_rax = -1;
+            current->p_state = P_BLOCKED;
+        }
         else {
-            // read 1 character
-            buf[0] = pipebuffer[0];
-            pipebuffer_len = 0;
-            current->p_registers.reg_rax = 1;
+            size_t chars_to_read = PIPE_SIZE - pipebuffer_len;
+            if (sz < chars_to_read)
+                chars_to_read = sz;
+            memcpy(buf, pipebuffer, chars_to_read);
+            memcpy(pipebuffer, pipebuffer + chars_to_read, pipebuffer_len - chars_to_read);
+            pipebuffer_len -= chars_to_read;
+            current->p_registers.reg_rax = chars_to_read;
         }
 
         break;
@@ -257,6 +267,8 @@ void schedule(void) {
         pid = (pid + 1) % NPROC;
         if (processes[pid].p_state == P_RUNNABLE)
             run(&processes[pid]);
+        if (processes[pid].p_state == P_BLOCKED && pipebuffer_len != 0)
+            processes[pid].p_state = P_RUNNABLE;
         // If Control-C was typed, exit the virtual machine.
         check_keyboard();
     }
