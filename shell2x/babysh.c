@@ -49,13 +49,19 @@ static int dowait(pid_t pid);
 static int
 run_cmd(int argc, char *argv[]) {
 	(void)argc;
-	(void)argv;
 	/*
 	 * TODO
 	 * If you get here, then you are dealing with a command that
 	 * will be implemented by executing a program. You will need 
 	 * to do a fork/exec here and then wait for the child.
 	 */
+	pid_t child = fork();
+	if (child == 0) {
+		if (execvp(argv[0], argv) == -1) {
+			printf("The exec failed: %s\n", strerror(errno));
+			exit(1);
+		}
+	}
 
 	/*
 	 * TODO
@@ -64,7 +70,7 @@ run_cmd(int argc, char *argv[]) {
 	 * you have to fill in called "dowait." Call it here in the parent
 	 * process.
 	 */
-	return (0);
+	return dowait(child);
 }
 
 /*
@@ -75,7 +81,6 @@ run_cmd(int argc, char *argv[]) {
 static int
 dowait(pid_t pid)
 {
-	(void)pid;
 	/*
 	 * TODO
 	 * Make a process wait on a particular pid, and give proper
@@ -84,7 +89,10 @@ dowait(pid_t pid)
 	 * NOTE: Read the man page to decide what, if any, flags you want
 	 * to user here.
 	 */
-	return (0);
+	int status;
+	while (pid != waitpid(pid, &status, WNOHANG))
+		continue;
+	return status;
 }
 
 /*
