@@ -10,10 +10,11 @@ void signal_handler(int signal) {
 int main(void) {
     fprintf(stderr, "%.6f: parent: Hello from pid %d\n", 0.0, getpid());
 
-    // GOAL: Use `signalfd`, rather than a signal-pipe (as in the
+    // GOAL: Use signal blocking, rather than a signal-pipe (as in the
     // current code), to reliably detect a SIGCHLD signal. Your
     // eventual code should NOT have a `signal_handler` or a
-    // `signalpipe`. See `man signalfd`.
+    // `signalpipe`. See `man sigprocmask`, `man sigblock`, and
+    // `man pselect`.
     int r = pipe(signalpipe);
     assert(r >= 0);
     r = handle_signal(SIGCHLD, signal_handler);

@@ -1,24 +1,24 @@
 #include "helpers.h"
-int signalpipe[2];
 
 void signal_handler(int signal) {
     (void) signal;
-    ssize_t r = write(signalpipe[1], "!", 1);
-    assert(r == 1);
 }
 
 int main(void) {
     fprintf(stderr, "%.6f: parent: Hello from pid %d\n", 0.0, getpid());
 
-    // GOAL: Use signal blocking, rather than a signal-pipe (as in the
+    // GOAL: Use `signalfd`, rather than a signal-pipe (as in the
     // current code), to reliably detect a SIGCHLD signal. Your
-    // eventual code should NOT have a `signal_handler` or a
-    // `signalpipe`. See `man sigprocmask`, `man sigblock`, and
-    // `man pselect`.
-    int r = pipe(signalpipe);
-    assert(r >= 0);
+    // eventual code should NOT have a `signalpipe`. See `man signalfd`.
+    int r;
+    int sfd;
+    sigset_t mask;
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGCHLD);
+    sfd = signalfd(-1, &mask, 0);
     r = handle_signal(SIGCHLD, signal_handler);
     assert(r >= 0);
+
 
     // Start a child
     double start_time = timestamp();
@@ -31,12 +31,12 @@ int main(void) {
         exit(0);
     }
 
-    // Wait for 0.75 sec, or until a byte is written to `signalpipe`,
+    // Wait for 0.75 sec, or until a byte is written to `sfd`,
     // whichever happens first
     struct timeval timeout = { 0, 750000 };
     fd_set fds;
-    FD_SET(signalpipe[0], &fds);
-    r = select(signalpipe[0] + 1, &fds, NULL, NULL, &timeout);
+    FD_SET(sfd, &fds);
+    select(sfd, &fds, NULL, NULL, &timeout);
 
     int status;
     pid_t exited_pid = waitpid(p1, &status, WNOHANG);
