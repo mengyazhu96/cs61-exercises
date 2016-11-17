@@ -11,6 +11,14 @@
 #define RANDOM_INT(lo, hi) ((int)(lo + ((double)random() / RAND_MAX) * (hi - lo + 1)))
 
 
+struct elf_info {
+	int elves_finished[NELVES];
+    int num_finished;
+	pthread_mutex_t *mutex;
+};
+
+struct elf_info* einfo;
+
 // The argument is simply the elf's ID number
 void *
 elf_thread(void *arg)
@@ -30,7 +38,10 @@ elf_thread(void *arg)
     // Say, "Harry Potter is the greatest Wizard Ever."
     usleep(RANDOM_INT(1,1000));
     printf("Elf %lld: Harry Potter is the greatest Wizard Ever!\n", id);
-
+    pthread_mutex_lock(einfo->mutex);
+    einfo->elves_finished[einfo->num_finished] = id;
+    einfo->num_finished++;
+    pthread_mutex_unlock(einfo->mutex);
     return (NULL);
 }
 
@@ -48,6 +59,12 @@ main(void)
         exit (1);
     }
 
+    einfo = malloc(sizeof(struct elf_info));
+    pthread_mutex_t mutex;
+    pthread_mutex_init(&mutex, NULL);
+    einfo->mutex = &mutex;
+    einfo->num_finished = 0;
+
     for (long long i = 0; i < NELVES; i++) {
         if (pthread_create(thread_ids + i, NULL, &elf_thread, (void *)i) != 0) {
             fprintf(stderr, "Dobby: pthread_create %lld failed %s\n",
@@ -61,8 +78,20 @@ main(void)
     // for the elf's ID number, then you can uncomment this.)
     // printf("Thanks for your work, Elf %d!\n", IDNUM);
 
+    int elves_finished = 0;
+    while (elves_finished < NELVES) {
+        pthread_mutex_lock(einfo->mutex);
+        if (einfo->num_finished > 0)
+            for (int i = 0; i < einfo->num_finished; i++)
+                printf("Thanks for your work, Elf %d!\n", einfo->elves_finished[i]);
+        elves_finished += einfo->num_finished;
+        einfo->num_finished = 0;
+        pthread_mutex_unlock(einfo->mutex);
+    }
+
     free(thread_ids);
 
     printf("Dobby is done\n");
+    pthread_mutex_destroy(&mutex);
 }
 
