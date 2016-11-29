@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
     int lfd = make_listen(port);
     make_nonblocking(lfd);
 
-    // Prepare connection array
+    // Allow many fds
     raise_file_limit();
 
     while (1) {

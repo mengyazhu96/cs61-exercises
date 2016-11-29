@@ -2,31 +2,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <pthread.h>
 
 int make_listen(int port);
 void handle_connection(FILE* fin, FILE* fout);
 int remove_trailing_whitespace(char* buf);
-
-static pthread_mutex_t mutex;
-static int n_connection_threads;
-
-void* connection_thread(void* arg) {
-    FILE* f = (FILE*) arg;
-
-    pthread_mutex_lock(&mutex);
-    ++n_connection_threads;
-    pthread_mutex_unlock(&mutex);
-
-    pthread_detach(pthread_self());
-    handle_connection(f, f);
-    fclose(f);
-
-    pthread_mutex_lock(&mutex);
-    --n_connection_threads;
-    pthread_mutex_unlock(&mutex);
-    pthread_exit(0);
-}
 
 int main(int argc, char** argv) {
     // Usage: ./serviceserver [PORT]
@@ -39,7 +18,8 @@ int main(int argc, char** argv) {
     // Prepare listening socket
     int fd = make_listen(port);
 
-    pthread_mutex_init(&mutex, NULL);
+    // Automatically reap children
+    signal(SIGCHLD, SIG_IGN);
 
     while (1) {
         // Accept connection on listening socket
@@ -49,19 +29,18 @@ int main(int argc, char** argv) {
             exit(1);
         }
 
-        // If too many threads, wait until one exits
-        while (n_connection_threads > 100)
-            sched_yield();
-
-        // Start thread to handle connection; no buffering please
-        pthread_t t;
-        FILE* f = fdopen(cfd, "a+");
-        setvbuf(f, NULL, _IONBF, 0);
-        int r = pthread_create(&t, NULL, connection_thread, (void*) f);
-        if (r != 0) {
-            perror("pthread_create");
+        // Fork child to handle connection
+        pid_t p = fork();
+        if (p == 0) {
+            FILE* f = fdopen(cfd, "a+");
+            handle_connection(f, f);
+            fclose(f);
+            exit(0);
+        } else if (p < 0) {
+            perror("fork");
             exit(1);
         }
+        close(cfd);
     }
 }
 

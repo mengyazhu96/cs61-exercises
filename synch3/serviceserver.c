@@ -2,33 +2,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <pthread.h>
 
 int make_listen(int port);
 void handle_connection(FILE* fin, FILE* fout);
 int remove_trailing_whitespace(char* buf);
-
-static pthread_mutex_t mutex;
-static pthread_cond_t condvar;
-static int n_connection_threads;
-
-void* connection_thread(void* arg) {
-    FILE* f = (FILE*) arg;
-
-    pthread_mutex_lock(&mutex);
-    ++n_connection_threads;
-    pthread_mutex_unlock(&mutex);
-
-    pthread_detach(pthread_self());
-    handle_connection(f, f);
-    fclose(f);
-
-    pthread_mutex_lock(&mutex);
-    --n_connection_threads;
-    pthread_cond_signal(&condvar);
-    pthread_mutex_unlock(&mutex);
-    pthread_exit(0);
-}
 
 int main(int argc, char** argv) {
     // Usage: ./serviceserver [PORT]
@@ -41,9 +18,6 @@ int main(int argc, char** argv) {
     // Prepare listening socket
     int fd = make_listen(port);
 
-    pthread_mutex_init(&mutex, NULL);
-    pthread_cond_init(&condvar, NULL);
-
     while (1) {
         // Accept connection on listening socket
         int cfd = accept(fd, NULL, NULL);
@@ -52,23 +26,10 @@ int main(int argc, char** argv) {
             exit(1);
         }
 
-        // If too many threads, wait until one exits
-        while (n_connection_threads > 100) {
-            pthread_mutex_lock(&mutex);
-            if (n_connection_threads > 100)
-                pthread_cond_wait(&condvar, &mutex);
-            pthread_mutex_unlock(&mutex);
-        }
-
-        // Start thread to handle connection; no buffering please
-        pthread_t t;
+        // Handle connection
         FILE* f = fdopen(cfd, "a+");
-        setvbuf(f, NULL, _IONBF, 0);
-        int r = pthread_create(&t, NULL, connection_thread, (void*) f);
-        if (r != 0) {
-            perror("pthread_create");
-            exit(1);
-        }
+        handle_connection(f, f);
+        fclose(f);
     }
 }
 
