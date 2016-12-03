@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Lecture 23 - CS 61 2016</title>
+</head>
+
+<style>
+body {
+font-family: "Chaparral Pro", "Hoefler Text";
+font-size: 36pt;
+margin-left: 1em;
+margin-right: 1em;
+text-rendering: optimizeLegibility;
+}
+h1 {
+font-size: 56pt;
+font-style: italic;
+font-weight: 200;
+color: #000055;
+}
+h1.title {
+  font-family: Impact;
+  font-weight: 800;
+  font-style: normal;
+}
+h2 {
+font-size: 48pt;
+color: #000055;
+font-style: italic;
+font-weight: 400;
+}
+h1 em, h2 em {
+font-style: normal;
+}
+div.sl > h1, div.sl > h2 {
+margin-top: 0;
+}
+div.sl {
+padding-top: 0.5em;
+min-height: 24em;
+}
+.hide {
+display: none;
+}
+.nb, .nw {
+white-space: nowrap;
+}
+.pw, pre.pw {
+  white-space: pre-wrap;
+}
+.col {
+  columns: 400px 3;
+  column-gap: 2em;
+}
+table, tr, td {
+padding: 0;
+border-spacing: 0;
+border: 0 none;
+border-collapse: collapse;
+empty-cells: show;
+vertical-align: baseline;
+}
+table.padr td, table.padr th {
+padding-right: 1em;
+}
+th {
+font-style: italic;
+font-weight: inherit;
+}
+table.x > tbody > tr > td {
+  padding-right: 0.75em;
+}
+table.x > thead > tr > th {
+  text-align: left;
+  padding-right: 0.75em;
+}
+.r {
+text-align: right;
+}
+.hl0 {
+  color: #dd6600;
+}
+.hl1 {
+  color: #00aa33;
+}
+.hl2 {
+  color: #7777ff;
+}
+div.source {
+padding-top: 2em;
+font-style: italic;
+font-size: 12pt;
+color: #777777;
+}
+.sm {
+font-size: smaller;
+}
+b.spec {
+font-weight: 600;
+}
+pre, code, tt {
+font-family: Menlo, Monaco, monospace;
+font-size: 90%;
+}
+ul{
+  line-height: 1.2;
+}
+.sltax > ul {
+  font-weight: bold;
+}
+.sltax > ul > li > ul {
+  font-weight: normal;
+}
+.sltax > ul > li > ul > li > ul {
+  font-style: italic;
+}
+hl {
+  color: #dd6600;
+}
+.helv {
+  font-family: Helvetica;
+}
+.sl.helv h2 {
+  font-style: normal;
+}
+li.plus, li.minus {
+list-style-type: none;
+}
+li.plus:before, li.minus:before {
+display: block;
+position: absolute;
+margin-left: -1.75em;
+width: 1.5em;
+text-align: right;
+font-weight: bold;
+}
+li.plus:before {
+content: "+";
+}
+li.minus:before {
+content: "−";
+}
+</style>
+<script src="jquery-1.12.3.min.js"></script>
+<script src="harvard14.js"></script>
+
+<body>
+
+<!--
+<div class="sl">
+<h1 class="title">A TAXONOMY<br><span style="font-size:150%">OF NON-SUCCESS</font></h1>
+
+<div style="font-size:85%">
+Eddie Kohler<br>
+presenting work with many others
+</div>
+</div>
+-->
+
+<div class="sl">
+  <h2>Networking</h2>
+</div>
+
+<div class="sl">
+  <h2>What is a distributed system?</h2>
+  <ul>
+    <li>Two or more computers working toward a common goal</li>
+    <li>Immense power, immensely fun</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Distributed systems from 10,000 feet</h2>
+  <ul>
+    <li>Connection management</li>
+    <li>Serialization</li>
+    <li>Fair sharing</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Connection management</h2>
+  <ul>
+    <li>Safely and reliably connecting to other computers and
+      exchanging messages</li>
+    <li>Bugs in other computers, and failures in the
+      network, propagate to your code</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Serialization</h2>
+  <ul>
+    <li>Communicate intent as messages</li>
+    <li>Define efficient message formats and useful semantics</li>
+    <li>Handle corruption, message loss, …</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Fair sharing</h2>
+  <ul>
+    <li>Let different users safely share the same infrastructure</li>
+    <li>Guard against attack</li>
+    <li>&rarr; See CS 143</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>The issue is failure</h2>
+  <ul>
+    <li>A program can fail for many reasons: software bug, hardware issue, power failure, underprovisioning, coordinated attack, …</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>The issue is failure</h2>
+  <ul>
+    <li>On a single computer, many of these causes are <em>coupled</em> or <em>dependent</em><ul>
+        <li>If one process “loses power,” they all do!</li>
+    </ul></li>
+    <li>Across many computers, these causes are <em>decoupled</em> or <em>independent</em></li>
+    <li>This makes it <em>much more likely</em> that a program in a distributed system will observe a failure<ul>
+        <li>Law of probability!</li>
+        <li>Say <em>p</em> = probability of observing a component failure</li>
+        <li>Then if <em>N</em> components might fail independently, chance of seeing <em>at least one</em> failure is <em>q</em> = 1 &minus; (1 &minus; <em>p</em>)<sup><em>N</em></sup></li>
+        <li>If <em>p</em> = 1% and <em>N</em> = 4, then <em>q</em> &approx; 4%</li>
+        <li>If <em>p</em> = 10% and <em>N</em> = 4, then <em>q</em> &approx; 34%</li>
+    </ul></li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>What is a distributed system? (2)</h2>
+  <blockquote>
+    “A distributed system is one in which the failure of a computer
+    you didn’t even know existed can render your own computer
+    unusable.” —Leslie Lamport
+  </blockquote>
+</div>
+
+<div class="sl">
+  <h2>Theoretical results</h2>
+  <ul>
+    <li>Distributed systems are hard in practice</li>
+    <li>They’re also hard in theory!</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Consensus</h2>
+  <ul>
+    <li>System of <em>N</em> components (“processes”)</li>
+    <li><em>F</em> are <em>faulty</em>, <em>N &minus; F</em> are <em>correct</em></li>
+    <li>Each process starts with a <em>proposal</em>: a value (e.g., “leave” or “stay”)</li>
+    <li>Processes exchange point-to-point messages in rounds</li>
+    <li>Each process eventually <em>decides</em> on a value</li>
+    <li>Goal: All correct processes decide the same value</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Leader consensus</h2>
+  <ul>
+    <li>Consensus, but one process is a distinguished <em>leader</em><ul>
+        <li>Might be faulty</li>
+    </ul></li>
+    <li>The leader always decides on its value</li>
+    <li>Goal: All correct processes decide the same value</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Fault classes</h2>
+  <ul>
+    <li><em>Stop faults</em>: a faulty process stops sending or receiving messages</li>
+    <li><em>Byzantine faults</em>: a faulty process can do anything</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Network classes</h2>
+  <ul>
+    <li><em>Synchronous network</em>: every message is delivered correctly within a fixed time</li>
+    <li><em>Asynchronous network</em>: messages can be dropped or arbitrarily delayed</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Consensus results</h2>
+  <ul>
+    <li>Synchronous consensus is impossible unless <em>N</em> &gt; 3<em>F</em>!</li>
+    <li>Synchronous consensus with stop failures is impossible unless <em>N</em> &gt; 2<em>F</em>!<ul>
+        <li>The <em>Paxos</em> (or Viewstamped Replication) algorithm</li>
+    </ul></li>
+    <li>Asynchronous consensus with stop failures is impossible unless <strong><em>F</em> = 0</strong>!!!</li>
+  </ul>
+  <div class="source">Further reading: “The Byzantine generals problem”; “Impossibility of Distributed Consensus with One Faulty Process”; “Paxos Made Simple”; …</div>
+</div>
+
+
+<div class="sl">
+  <h2><a href="https://en.wikipedia.org/wiki/Fallacies_of_distributed_computing">The Eight Fallacies of Distributed Computing</a></h2>
+  <ol style="columns:2">
+    <li>The network is reliable</li>
+    <li>Latency is zero</li>
+    <li>Bandwidth is infinite</li>
+    <li>The network is secure</li>
+    <li>Topology doesn’t change</li>
+    <li>There is one administrator</li>
+    <li>Transport cost is zero</li>
+    <li>The network is homogeneous</li>
+  </ol>
+  <div class="source">L. Peter Deutsch</div>
+</div>
+
+<div class="sl">
+  <h2>Distributed computing in practice</h2>
+  <ul>
+    <li>It’s impossible, we do it anyway</li>
+    <li>Handle the most common faults well</li>
+    <li>Handle less common faults OK</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Connection management</h2>
+  <ul>
+    <li>Two computers want to talk to each other</li>
+    <li>Type of communication?</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Connection management</h2>
+  <ul>
+    <li>Two computers want to talk to each other</li>
+    <li>Streaming communication</li>
+    <li>Which goes first?</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Sockets</h2>
+  <ul>
+    <li>Solution: New file descriptor type for receiving <em>connections</em></li>
+    <li>The <em>listening</em> or <em>passive socket</em></li>
+    <li>Created by three system calls, <code>socket</code>, <code>bind</code>,  and finally <code>listen</code><ul>
+        <li><code>socket</code>: Create a socket for a given networking protocol and connection type</li>
+        <li><code>bind</code>: Attach to a given address range and on a given port</li>
+        <li><code>listen</code>: Listen for new connections</li>
+    </ul></li>
+    <li>New connection received by <code>accept</code><ul>
+        <li>Returns not data, but <em>a file descriptor</em></li>
+        <li>Blocking system call</li>
+    </ul></li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Active sockets</h2>
+  <ul>
+    <li>To connect to a listening socket, we use an <em>active socket</em></li>
+    <li><code>socket</code> and then <code>connect</code></li>
+    <li><code>connect</code> connects to a listening socket elsewhere<ul>
+        <li>Blocking system call</li>
+    </ul></li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Client–server model</h2>
+  <ul>
+    <li>Architectural plan for distributed systems</li>
+    <li>Two roles: <em>client</em> and <em>server</em></li>
+    <li>Client connects to server and asks a question</li>
+    <li>Server responds</li>
+    <li>Client sockets are active, server sockets passive</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Client–server in general</h2>
+  <ul>
+    <li>A single process might act as both a client and a server</li>
+    <li>Still a useful way to think</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Remote procedure call model (RPC)</h2>
+  <ul>
+    <li>Analogy: Distributed system interactions should be like function calls</li>
+    <li>Client calls function located on server, waits for response</li>
+    <li>Questions: Message format? Failure/efficiency?</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Example: serviceclient, serviceserver</h2>
+</div>
+
+<div class="sl">
+  <h2>What can go wrong?</h2>
+  <ul>
+    <li>Connection attempt fails</li>
+    <li>Message corruption (intentional or unintentional)</li>
+    <li>Unexpected popularity</li>
+    <li>We worry most about servers<ul>
+        <li>Many servers publicly accessible, most clients aren’t</li>
+        <li>Client security increasingly important</li>
+    </ul></li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Remote code execution vulnerability</h2>
+  <ul>
+    <li>Bug in server code lets client run arbitrary code on server via carefully-crafted messages</li>
+    <li>Example: buffer overflow</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Denial-of-service attack (DoS)</h2>
+  <ul>
+    <li>Some server resource is overwhelmed, leaving it unable to respond</li>
+    <li>Memory, CPU time, file descriptors, …</li>
+    <li>Server isn’t otherwise compromised</li>
+    <li>Can be hard to distinguish attack from popularity</li>
+    <li>I have DoSed my own services more times than I can count</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>DoS example</h2>
+  <ul>
+    <li>How can you DoS <code>serviceserver.c</code>?</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Connection handling models</h2>
+  <ul>
+    <li>Process-per-connection (serviceserver-02)<ul>
+        <li class="plus">Failure independence</li>
+        <li class="minus">Heavyweight</li>
+    </ul></li>
+    <li>Thread-per-connection (serviceserver-04)<ul>
+        <li class="plus">Lighter weight</li>
+        <li class="minus"><em>Synchronization!</em></li>
+    </ul></li>
+    <li>Event-driven (serviceserver-08)<ul>
+        <li class="plus">Lightest weight, fastest</li>
+        <li class="minus">Most difficult to program</li>
+    </ul></li>
+    <li>And: Process pool, thread pool, …</li>
+  </ul>
+</div>
+
+</body>
+</html>

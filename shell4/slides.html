@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Lecture 21 - CS 61 2016</title>
+</head>
+
+<style>
+body {
+font-family: "Chaparral Pro", "Hoefler Text";
+font-size: 36pt;
+margin-left: 1em;
+margin-right: 1em;
+text-rendering: optimizeLegibility;
+}
+h1 {
+font-size: 56pt;
+font-style: italic;
+font-weight: 200;
+color: #000055;
+}
+h1.title {
+  font-family: Impact;
+  font-weight: 800;
+  font-style: normal;
+}
+h2 {
+font-size: 48pt;
+color: #000055;
+font-style: italic;
+font-weight: 400;
+}
+h1 em, h2 em {
+font-style: normal;
+}
+div.sl > h1, div.sl > h2 {
+margin-top: 0;
+}
+div.sl {
+padding-top: 0.5em;
+min-height: 24em;
+}
+.hide {
+display: none;
+}
+.nb, .nw {
+white-space: nowrap;
+}
+.pw, pre.pw {
+  white-space: pre-wrap;
+}
+.col {
+  columns: 400px 3;
+  column-gap: 2em;
+}
+table, tr, td {
+padding: 0;
+border-spacing: 0;
+border: 0 none;
+border-collapse: collapse;
+empty-cells: show;
+vertical-align: baseline;
+}
+table.padr td, table.padr th {
+padding-right: 1em;
+}
+th {
+font-style: italic;
+font-weight: inherit;
+}
+table.x > tbody > tr > td {
+  padding-right: 0.75em;
+}
+table.x > thead > tr > th {
+  text-align: left;
+  padding-right: 0.75em;
+}
+.r {
+text-align: right;
+}
+.hl0 {
+  color: #dd6600;
+}
+.hl1 {
+  color: #00aa33;
+}
+.hl2 {
+  color: #7777ff;
+}
+div.source {
+padding-top: 2em;
+font-style: italic;
+font-size: 12pt;
+color: #777777;
+}
+.sm {
+font-size: smaller;
+}
+b.spec {
+font-weight: 600;
+}
+pre, code, tt {
+font-family: Menlo, Monaco, monospace;
+font-size: 90%;
+}
+ul{
+  line-height: 1.2;
+}
+.sltax > ul {
+  font-weight: bold;
+}
+.sltax > ul > li > ul {
+  font-weight: normal;
+}
+.sltax > ul > li > ul > li > ul {
+  font-style: italic;
+}
+hl {
+  color: #dd6600;
+}
+.helv {
+  font-family: Helvetica;
+}
+.sl.helv h2 {
+  font-style: normal;
+}
+</style>
+<script src="jquery-1.12.3.min.js"></script>
+<script src="harvard14.js"></script>
+
+<body>
+
+<!--
+<div class="sl">
+<h1 class="title">A TAXONOMY<br><span style="font-size:150%">OF NON-SUCCESS</font></h1>
+
+<div style="font-size:85%">
+Eddie Kohler<br>
+presenting work with many others
+</div>
+</div>
+-->
+
+<div class="sl">
+  <h2>Signals, scheduling, and race conditions</h2>
+</div>
+
+<div class="sl">
+  <h2>Processes as abstractions</h2>
+  <ul>
+    <li>The OS aims to provide unprivileged processes with safe, isolated access to all machine features.</li>
+    <li>Example: Direct access to processor (except for dangerous instructions)</li>
+    <li>Example: Virtual memory</li>
+    <li>Example: System calls and OS abstractions for hardware devices (a file as opposed to direct disk access)</li>
+    <li>What about <em>interrupts</em>?</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Purpose of interrupts</h2>
+  <ul>
+    <li>Infrequent events get quick access to the CPU</li>
+    <li>Avoids “are we there yet?”</li>
+    <li>Can simplify code (no need to poll the infrequent event)</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>How interrupts work</h2>
+  <ul>
+    <li>An example of exceptional control flow</li>
+    <li>Processor saves current state on a special stack</li>
+    <li>Transfers control to a prespecified entry point</li>
+    <li>Kernel later returns to saved state (possibly after modification)</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Signals model interrupts</h2>
+  <ul>
+    <li>A <em>signal</em> is the unprivileged process-level model of an interrupt</li>
+    <li>Signal &harr; interrupt</li>
+    <li>Signal handler &harr; interrupt handler</li>
+    <li>Signal number &harr; interrupt type</li>
+    <li>There are signal stacks too!</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Signal examples</h2>
+  <ul>
+    <li><code>SIGCHLD</code>: a child process died</li>
+    <li><code>SIGALRM</code>: a timer expired</li>
+    <li><code>SIGINT</code>: Control-C on terminal</li>
+    <li><code>SIGTSTP</code>: Control-Z on terminal</li>
+    <li><code>SIGKILL</code>: DIE DIE DIE</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Signal system calls</h2>
+  <ul>
+    <li><code>sigaction</code>: install a signal handler</li>
+    <li><code>kill</code>: send signal to a given process or process group</li>
+    <li>Many others…</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>When are signals delivered?</h2>
+  <ul>
+    <li>A signal can be delivered after <em>any instruction!</em></li>
+    <li>This makes it very important to reason about race conditions, and in practice hugely limits the ways signal handlers can be used.</li>
+    <li>A signal can also be made to interrupt blocking system calls, such as <code>read</code> and <code>usleep</code>.</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2>Race conditions</h2>
+  <ul>
+    <li>Definition: A situation where the order events occur can affect output.</li>
+    <li>A race condition is a bug when some orders produce undesirable outputs.</li>
+    <li>We limit race conditions by reasoning about event orders and leveraging atomic actions, such as system calls.</li>
+  </ul>
+</div>
+
+<div class="sl">
+  <h2><code>select</code></h2>
+  <ul>
+    <li>The <code>select</code> system call lets a process wait for <i>any number</i> of events.</li>
+    <li><code>select(N, RFDS, WFDS, XFDS, TIMEOUT)</code><ul>
+        <li><code>RFDS</code>: File descriptors to check for <i>read readiness</i> (data available or end-of-file)</li>
+        <li><code>WFDS</code>: File descriptors to check for <i>write readiness</i> (space available or closed)</li>
+        <li><code>XFDS</code>: always <code>NULL</code> in practice</li>
+        <li><code>N</code>: 1 more than the maximum file descriptor in <code>RFDS</code> or <code>WFDS</code></li>
+        <li><code>TIMEOUT</code>: maximum time to wait</li>
+    </ul></li>
+    <li>Returns number of ready file descriptors or -1 (e.g., interrupted by signal)</li>
+    <li><i>Also</i> clears unready file descriptors from the <code>FDS</code> sets</li>
+    <li>Why is this cool?<ul>
+        <li>Can wait for many events at once (e.g., first of “data readable” and “timeout”</li>
+        <li>Programming pattern: Only blocking system call is <code>select</code>, use polling system calls for everything else</li>
+        <li><em>Event-driven programming</em> is the high-performance way to write network servers; e.g., nginx</li>
+    </ul></li>
+  </ul>
+</div>
+      
+
+<div class="sl">
+  <h2>Unit recap</h2>
+  <ul>
+    <li>Systems programming depends on understanding your tools</li>
+    <li>Especially system calls (other libraries too)</li>
+    <li>This unit taught you many tools: pipes, file descriptor manipulation, child processes, signals, process groups (see pset)</li>
+    <li>And properties of those tools: blocking vs. polling, race conditions, system call atomicity, …</li>
+    <li>Our goal: You understand these system calls and their general properties<ul>
+        <li>You can apply these system calls in creative ways to solve new problems</li>
+        <li>You can incorporate new system calls into your repertoire</li>
+    </ul></li>
+  </ul>
+</div>
+
+</body>
+</html>
