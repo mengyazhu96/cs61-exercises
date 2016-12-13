@@ -38,7 +38,7 @@ D4. OF: the most recent operation caused a 2's complement overflow (signed integ
 
 E. Instructions whose only purpose is to set flag values:
 Explain how each instruction sets the flag registers.
-E1. cmp operand1, operand2: calculates operand1 - operand2 nondestructively
+E1. cmp operand1, operand2: calculates operand2 - operand1 nondestructively
 E2. test operand1, operand2: calculates operand1 & operand2 nondestructively
 
 F. Jump Instructions
